@@ -1,0 +1,11 @@
+go 1.23.0
+
+use (
+	.
+	./examples/commands
+	./examples/continous
+	./examples/continousplusrpc
+	./examples/denylist
+	./examples/rpc
+	./examples/simple
+)
