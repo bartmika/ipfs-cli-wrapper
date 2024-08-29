@@ -18,7 +18,7 @@ import (
 // is a useful option if you developing an app in which you restart often and
 // you don't want to restart the `ipfs` binary often then use this option.
 func WithContinousOperation() Option {
-	return func(wrap *IpfsCliWrapper) {
+	return func(wrap *ipfsCliWrapper) {
 		wrap.isDaemonRunningContinously = true
 	}
 }
@@ -28,7 +28,7 @@ func WithContinousOperation() Option {
 // freebsd, openbsd and windows. The available `arch` choices are: arm, arm64,
 // 386, and amd64.
 func WithOverrideBinaryOsAndArch(overrideOS, overrideArch string) Option {
-	return func(wrap *IpfsCliWrapper) {
+	return func(wrap *ipfsCliWrapper) {
 		wrap.os = overrideOS
 		wrap.arch = overrideArch
 	}
@@ -38,7 +38,7 @@ func WithOverrideBinaryOsAndArch(overrideOS, overrideArch string) Option {
 // our wrapper to set a custom warmup delay for our app to give a custom delay
 // to allow the `ipfs` to loadup before giving your app execution control.
 func WithOverrideDaemonInitialWarmupDuration(seconds int) Option {
-	return func(wrap *IpfsCliWrapper) {
+	return func(wrap *ipfsCliWrapper) {
 		wrap.daemonInitialWarmupDuration = time.Duration(seconds) * time.Second
 	}
 }
@@ -48,7 +48,7 @@ func WithOverrideDaemonInitialWarmupDuration(seconds int) Option {
 // background and shut it down before our package loads up a new `ipfs` binary
 // instance.
 func WithForcedShutdownDaemonOnStartup() Option {
-	return func(wrap *IpfsCliWrapper) {
+	return func(wrap *ipfsCliWrapper) {
 		// This code is special because we need to lookup the `ipfs` running
 		// process in the operating system and send a `SIGTERM` signal via
 		// the operating system to cause that app to shutdown.
@@ -64,7 +64,7 @@ func WithForcedShutdownDaemonOnStartup() Option {
 // URL you provided and applies it to the `ipfs` binary running instance.
 // [0] https://github.com/ipfs/kubo/blob/master/docs/content-blocking.md
 func WithDenylist(denylistFilename string, denylistURL string) Option {
-	return func(wrap *IpfsCliWrapper) {
+	return func(wrap *ipfsCliWrapper) {
 		downloadedDenylistFilePath := "./bin/kubo/data/denylists/" + denylistFilename
 
 		// Download the file if it wasn't downloaded before.
@@ -77,7 +77,7 @@ func WithDenylist(denylistFilename string, denylistURL string) Option {
 }
 
 func WithRunGarbageCollectionOnStarup() Option {
-	return func(wrap *IpfsCliWrapper) {
+	return func(wrap *ipfsCliWrapper) {
 		// Prepare the command run garbage collection for the `ipfs` binary.
 		cmd := exec.CommandContext(context.Background(), IPFSBinaryFilePath, "repo", "gc")
 

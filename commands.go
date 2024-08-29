@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (wrap *IpfsCliWrapper) AddFile(ctx context.Context, filepath string) (string, error) {
+func (wrap *ipfsCliWrapper) AddFile(ctx context.Context, filepath string) (string, error) {
 	// Prepare the command to add the file using the IPFS binary
 	cmd := exec.CommandContext(ctx, IPFSBinaryFilePath, "add", filepath)
 
@@ -61,7 +61,7 @@ func (wrap *IpfsCliWrapper) AddFile(ctx context.Context, filepath string) (strin
 	return cid, nil
 }
 
-func (wrap *IpfsCliWrapper) AddFileContent(ctx context.Context, filename string, fileContent []byte) (string, error) {
+func (wrap *ipfsCliWrapper) AddFileContent(ctx context.Context, filename string, fileContent []byte) (string, error) {
 	if filename == "" {
 		return "", fmt.Errorf("cannot have missing: %v", "filename")
 	}
@@ -109,7 +109,7 @@ func (wrap *IpfsCliWrapper) AddFileContent(ctx context.Context, filename string,
 	return cid, err
 }
 
-func (wrap *IpfsCliWrapper) GetFile(ctx context.Context, cid string) error {
+func (wrap *ipfsCliWrapper) GetFile(ctx context.Context, cid string) error {
 	// Prepare the command to get the file using the IPFS binary
 	cmd := exec.CommandContext(ctx, IPFSBinaryFilePath, "get", cid)
 
@@ -126,7 +126,7 @@ func (wrap *IpfsCliWrapper) GetFile(ctx context.Context, cid string) error {
 	return nil
 }
 
-func (wrap *IpfsCliWrapper) Cat(ctx context.Context, cid string) ([]byte, error) {
+func (wrap *ipfsCliWrapper) Cat(ctx context.Context, cid string) ([]byte, error) {
 	// Prepare the command to retrieve the file contents using the IPFS binary
 	cmd := exec.CommandContext(ctx, IPFSBinaryFilePath, "cat", cid)
 
@@ -149,11 +149,11 @@ func (wrap *IpfsCliWrapper) Cat(ctx context.Context, cid string) ([]byte, error)
 	return output, nil
 }
 
-func (wrap *IpfsCliWrapper) ListPins(ctx context.Context) ([]string, error) {
+func (wrap *ipfsCliWrapper) ListPins(ctx context.Context) ([]string, error) {
 	return wrap.ListPinsByType(ctx, "all")
 }
 
-func (wrap *IpfsCliWrapper) ListPinsByType(ctx context.Context, typeID string) ([]string, error) {
+func (wrap *ipfsCliWrapper) ListPinsByType(ctx context.Context, typeID string) ([]string, error) {
 	// Prepare the command to list all local pins using the IPFS binary
 	//
 	// Notes:
@@ -212,7 +212,7 @@ func (wrap *IpfsCliWrapper) ListPinsByType(ctx context.Context, typeID string) (
 	return cids, nil
 }
 
-func (wrap *IpfsCliWrapper) Pin(ctx context.Context, cid string) error {
+func (wrap *ipfsCliWrapper) Pin(ctx context.Context, cid string) error {
 	// Prepare the command to pin the file contents using the IPFS binary
 	cmd := exec.CommandContext(ctx, IPFSBinaryFilePath, "pin", "add", cid)
 
@@ -228,7 +228,7 @@ func (wrap *IpfsCliWrapper) Pin(ctx context.Context, cid string) error {
 	return nil
 }
 
-func (wrap *IpfsCliWrapper) Unpin(ctx context.Context, cid string) error {
+func (wrap *ipfsCliWrapper) Unpin(ctx context.Context, cid string) error {
 	// Prepare the command to remove the pin using the IPFS binary
 	cmd := exec.CommandContext(ctx, IPFSBinaryFilePath, "pin", "rm", cid)
 
@@ -245,7 +245,7 @@ func (wrap *IpfsCliWrapper) Unpin(ctx context.Context, cid string) error {
 	return nil
 }
 
-func (wrap *IpfsCliWrapper) GarbageCollection(ctx context.Context) error {
+func (wrap *ipfsCliWrapper) GarbageCollection(ctx context.Context) error {
 	// Prepare the command run garbage collection for the `ipfs` binary.
 	cmd := exec.CommandContext(context.Background(), IPFSBinaryFilePath, "repo", "gc")
 

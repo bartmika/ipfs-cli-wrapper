@@ -24,7 +24,7 @@ import (
 
 // IpfsCliWrapper represents the a wrapper over a `ipfs` executable binary in
 // the operating system that we use to control the operation of.
-type IpfsCliWrapper struct {
+type ipfsCliWrapper struct {
 	logger *slog.Logger
 	// ipfsDaemonCmd variable is the pointer to the command shell instance of
 	// the `ipfs` binary running as daemon mode in the current operating system
@@ -60,9 +60,9 @@ type IpfsCliWrapper struct {
 }
 
 // Option is a functional option type that allows us to configure the IpfsCliWrapper.
-type Option func(*IpfsCliWrapper)
+type Option func(*ipfsCliWrapper)
 
-func NewDaemonLauncher(options ...Option) (*IpfsCliWrapper, error) {
+func NewDaemonLauncher(options ...Option) (IpfsCliWrapper, error) {
 	// STEP 1: Create the needed directories in the applications root directory
 	// so we can save our binary data into there.
 	dirs := []string{
@@ -85,7 +85,7 @@ func NewDaemonLauncher(options ...Option) (*IpfsCliWrapper, error) {
 
 	// STEP 3: Apply our option conditions.
 
-	wrapper := &IpfsCliWrapper{
+	wrapper := &ipfsCliWrapper{
 		logger:                      logger.NewProvider(),
 		isDaemonRunning:             false,
 		isDaemonRunningContinously:  false,
@@ -159,7 +159,7 @@ func NewDaemonLauncher(options ...Option) (*IpfsCliWrapper, error) {
 	return wrapper, nil
 }
 
-func (wrap *IpfsCliWrapper) StartDaemonInBackground() error {
+func (wrap *ipfsCliWrapper) StartDaemonInBackground() error {
 	// Before we begin our code, let's check if the `ipfs` binary is already
 	// running in the background, for whatever reason.
 	if isRunningAlready, err := oskit.IsProgramRunning("ipfs"); isRunningAlready || err != nil {
@@ -214,7 +214,7 @@ func (wrap *IpfsCliWrapper) StartDaemonInBackground() error {
 
 // ForceShutdownDaemon function will send KILL signal to the operating system
 // for the `ipfs` running daemon in background to force that binary to shutdown.
-func (wrap *IpfsCliWrapper) ForceShutdownDaemon() error {
+func (wrap *ipfsCliWrapper) ForceShutdownDaemon() error {
 	if wrap.isDaemonRunningContinously {
 		wrap.isDaemonRunning = false
 
@@ -226,7 +226,7 @@ func (wrap *IpfsCliWrapper) ForceShutdownDaemon() error {
 	return wrap.ShutdownDaemon()
 }
 
-func (wrap *IpfsCliWrapper) ShutdownDaemon() error {
+func (wrap *ipfsCliWrapper) ShutdownDaemon() error {
 	if wrap.isDaemonRunningContinously {
 		wrap.logger.Debug("Ignoring daemon shutdown as wrapper is running in continous operation mode")
 		return nil
