@@ -2,7 +2,7 @@ go 1.23.0
 
 use (
 	.
-	./examples/commands
+	./examples/cli
 	./examples/continous
 	./examples/continousplusrpc
 	./examples/denylist

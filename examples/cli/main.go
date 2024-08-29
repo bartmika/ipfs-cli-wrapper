@@ -11,14 +11,15 @@ import (
 
 /*
 DESCRIPTION
-This is an example of how to use the commands.
+This is an example of how to use the wrapper functions over the `ipfs` binary
+command line interface.
 
 HOW TO RUN:
 STEP 1: While in this project root directory, run the following:
-$ go work use ./examples/simple
+$ go work use ./examples/cli
 
 STEP 2: Go to this directory.
-$ cd ./examples/commands
+$ cd ./examples/cli
 
 STEP 3: Run the code.
 $ go run main.go
