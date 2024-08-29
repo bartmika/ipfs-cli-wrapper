@@ -391,8 +391,9 @@ func downloadAndUnzip(logger *slog.Logger, osName, archName string) error {
 }
 
 func (wrap *ipfsCliWrapper) AddFile(ctx context.Context, filepath string) (string, error) {
-	// Prepare the command to add the file using the IPFS binary
-	cmd := exec.CommandContext(ctx, IPFSBinaryFilePath, "add", filepath)
+	// Prepare the command to add the file using the IPFS binary and utilize
+	// the latest cid implementation.
+	cmd := exec.CommandContext(ctx, IPFSBinaryFilePath, "add", filepath, "--cid-version=1")
 
 	// Capture the output of the command
 	output, err := cmd.CombinedOutput()

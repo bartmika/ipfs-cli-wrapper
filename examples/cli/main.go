@@ -42,7 +42,7 @@ func main() {
 	if wrapper == nil {
 		log.Fatal("cannot return nil wrapper")
 	}
-	defer func(wrap *ipfscliwrapper.IpfsCliWrapper) {
+	defer func(wrap ipfscliwrapper.IpfsCliWrapper) {
 		// Step X: Close our IPFS.
 		if endErr := wrap.ShutdownDaemon(); endErr != nil {
 			log.Fatal(endErr)
