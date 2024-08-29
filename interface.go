@@ -48,13 +48,12 @@ type IpfsCliWrapper interface {
 	//
 	// Parameters:
 	//   ctx - Context for controlling cancellation and deadlines.
-	//   filename - The name of the file to be used when adding to IPFS.
 	//   fileContent - The byte slice containing the content of the file.
 	//
 	// Returns:
 	//   The CID (Content Identifier) of the added file on success.
 	//   An error if the file could not be added.
-	AddFileContent(ctx context.Context, filename string, fileContent []byte) (string, error)
+	AddFileContent(ctx context.Context, fileContent []byte) (string, error)
 
 	// GetFile retrieves a file from the IPFS network using its CID (Content Identifier).
 	// The function executes the `ipfs get` command, which downloads the file from the

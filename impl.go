@@ -17,6 +17,7 @@ import (
 
 	"github.com/bartmika/ipfs-cli-wrapper/internal/logger"
 	"github.com/bartmika/ipfs-cli-wrapper/internal/oskit"
+	"github.com/bartmika/ipfs-cli-wrapper/internal/randomkit"
 	"github.com/bartmika/ipfs-cli-wrapper/internal/urlkit"
 )
 
@@ -441,16 +442,15 @@ func (wrap *ipfsCliWrapper) AddFile(ctx context.Context, filepath string) (strin
 	return cid, nil
 }
 
-func (wrap *ipfsCliWrapper) AddFileContent(ctx context.Context, filename string, fileContent []byte) (string, error) {
-	if filename == "" {
-		return "", fmt.Errorf("cannot have missing: %v", "filename")
-	}
+func (wrap *ipfsCliWrapper) AddFileContent(ctx context.Context, fileContent []byte) (string, error) {
 	if fileContent == nil {
 		return "", fmt.Errorf("cannot have missing: %v", "fileContent")
 	}
 
-	// Save in the current directory this application is running.
-	filepath := "./" + filename
+	// Save in the current directory this application is running; however,
+	// generate a random filename to be used to store the content locally and
+	// then we will delete.
+	filepath := fmt.Sprintf("./ipfscliwrapper_tempfile_%v", randomkit.String(5))
 
 	// open output file
 	fo, err := os.Create(filepath)
@@ -473,15 +473,18 @@ func (wrap *ipfsCliWrapper) AddFileContent(ctx context.Context, filename string,
 		return "", err
 	}
 
-	cid, err := wrap.AddFile(ctx, filename)
+	// Delete our tempfile after we finished submitting
+	defer func() {
+		if rmErr := os.Remove(filepath); rmErr != nil {
+			wrap.logger.Error("failed removing from local filesystem",
+				slog.Any("error", err))
+			return
+		}
+	}()
+
+	cid, err := wrap.AddFile(ctx, filepath)
 	if err != nil {
 		wrap.logger.Error("failed adding file to ipfs",
-			slog.Any("error", err))
-		return "", err
-	}
-
-	if rmErr := os.Remove(filepath); rmErr != nil {
-		wrap.logger.Error("failed removing from local filesystem",
 			slog.Any("error", err))
 		return "", err
 	}
