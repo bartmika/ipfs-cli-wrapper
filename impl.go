@@ -2,6 +2,7 @@ package ipfscliwrapper
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -636,11 +637,38 @@ func (wrap *ipfsCliWrapper) GarbageCollection(ctx context.Context) error {
 	// Capture the output of the command
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		wrap.logger.Error("error removing pinning from ipfs",
+		wrap.logger.Error("error garbage collecting in ipfs",
 			slog.Any("error", err),
 			slog.String("output", string(output)))
 		return fmt.Errorf("failed to run garbage collection pin from ipfs: %v, output: %s", err, string(output))
 	}
 
 	return nil
+}
+
+func (wrap *ipfsCliWrapper) Id(ctx context.Context) (*IpfsNodeInfo, error) {
+	// Special thanks:
+	// https://github.com/ipfs-shipyard/ipfs-primer/blob/12d7298f436fa83e8395ade6969d2a4df298b334/going-online/lessons/connect-your-node.md
+
+	// Prepare the command run garbage collection for the `ipfs` binary.
+	cmd := exec.CommandContext(context.Background(), IPFSBinaryFilePath, "id")
+
+	// Capture the output of the command
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		wrap.logger.Error("error getting ipfs id",
+			slog.Any("error", err),
+			slog.String("output", string(output)))
+		return nil, fmt.Errorf("failed to run `id` in ipfs: %v, output: %s", err, string(output))
+	}
+
+	// Create an instance of IPFSInfo.
+	var info IpfsNodeInfo
+
+	// Parse the JSON string into the struct.
+	if err := json.Unmarshal([]byte(output), &info); err != nil {
+		log.Fatalf("Error unmarshalling JSON: %v", err)
+	}
+
+	return &info, nil
 }

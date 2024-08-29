@@ -119,3 +119,12 @@ func getDownloadURL(os string, arch string) (string, error) {
 	}
 	return val, nil
 }
+
+// IpfsNodeInfo represents the structured data of the `id` command results.
+type IpfsNodeInfo struct {
+	ID              string   `json:"ID"`
+	PublicKey       string   `json:"PublicKey"`
+	Addresses       []string `json:"Addresses"`
+	AgentVersion    string   `json:"AgentVersion"`
+	ProtocolVersion string   `json:"ProtocolVersion"`
+}

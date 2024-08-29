@@ -130,6 +130,14 @@ type IpfsCliWrapper interface {
 	//
 	// Returns an error if the garbage collection process failed.
 	GarbageCollection(ctx context.Context) error
+
+	// Id returns the IPFS node connection details of the running daemon.
+	//
+	// Parameters:
+	//   ctx - Context for controlling cancellation and deadlines.
+	//
+	// Returns an error if the failed getting connection details from IPFS.
+	Id(ctx context.Context) (*IpfsNodeInfo, error)
 }
 
 // Option is a functional option type that allows us to configure the IpfsCliWrapper.

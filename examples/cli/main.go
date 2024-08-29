@@ -53,6 +53,13 @@ func main() {
 		log.Fatal(startErr)
 	}
 
+	// Get our daemon's id values:
+	nodeInfo, err := wrapper.Id(context.Background())
+	if err != nil {
+		log.Fatal("failed adding file")
+	}
+	log.Println("id:", nodeInfo)
+
 	// Step 2: Add our file.
 	cid, addFileErr := wrapper.AddFile(context.Background(), "./sample.txt")
 	if addFileErr != nil {
