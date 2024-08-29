@@ -31,7 +31,7 @@ $ go run main.go
 */
 
 func main() {
-	wrapper, initErr := ipfscliwrapper.NewDaemonLauncher(
+	wrapper, initErr := ipfscliwrapper.NewWrapper(
 		ipfscliwrapper.WithContinousOperation(),
 	)
 	if initErr != nil {

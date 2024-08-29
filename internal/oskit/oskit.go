@@ -1,5 +1,6 @@
-// Package oskit provides number of useful convinence functions related to
-// OS operations like `mkdir`, `mv`, etc.
+// Package oskit provides a set of convenience functions related to operating
+// system operations such as creating directories, moving files, checking if
+// a program is running, and terminating processes.
 package oskit
 
 import (
@@ -13,6 +14,21 @@ import (
 	"syscall"
 )
 
+// CreateDirIfDoesNotExist creates a directory at the specified path if it does not already exist.
+// It sets the permissions to the default permissions for the operating system.
+//
+// Parameters:
+// - dirPath (string): The path of the directory to create.
+//
+// Returns:
+// - error: Returns an error if the directory cannot be created.
+//
+// Example:
+//
+//	err := CreateDirIfDoesNotExist("/path/to/dir")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 func CreateDirIfDoesNotExist(dirPath string) error {
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
@@ -21,6 +37,21 @@ func CreateDirIfDoesNotExist(dirPath string) error {
 	return nil
 }
 
+// CreateDirsIfDoesNotExist creates multiple directories based on the provided slice of paths.
+// It sets the permissions for each directory to the default permissions for the operating system.
+//
+// Parameters:
+// - dirPaths ([]string): A slice of directory paths to create.
+//
+// Returns:
+// - error: Returns an error if any directory cannot be created.
+//
+// Example:
+//
+//	err := CreateDirsIfDoesNotExist([]string{"/path/to/dir1", "/path/to/dir2"})
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 func CreateDirsIfDoesNotExist(dirPaths []string) error {
 	for _, dirPath := range dirPaths {
 		err := os.MkdirAll(dirPath, os.ModePerm)
@@ -32,6 +63,23 @@ func CreateDirsIfDoesNotExist(dirPaths []string) error {
 	return nil
 }
 
+// MoveFile moves a file from the source path to the destination path.
+// This function handles copying the file content, closing the file descriptors,
+// and removing the source file after successful copying.
+//
+// Parameters:
+// - sourcePath (string): The path to the source file.
+// - destPath (string): The path where the file should be moved.
+//
+// Returns:
+// - error: Returns an error if the file cannot be moved.
+//
+// Example:
+//
+//	err := MoveFile("/path/to/source.txt", "/path/to/destination.txt")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 func MoveFile(sourcePath string, destPath string) error {
 	// DEVELOPERS NOTE:
 	// Code was copied from: https://stackoverflow.com/a/50744122
@@ -73,9 +121,26 @@ func MoveFile(sourcePath string, destPath string) error {
 	return nil
 }
 
-// IsProgramRunning function checks to see if the program name exist in the
-// operating system running tasks and returns true or false if the program is
-// running.
+// IsProgramRunning checks if a program with the given name is currently running
+// in the operating system. It uses the `pgrep` command to search for processes
+// matching the exact program name.
+//
+// Parameters:
+// - programName (string): The name of the program to check.
+//
+// Returns:
+// - bool: Returns true if the program is running, false otherwise.
+// - error: Returns an error if the check fails due to issues with executing the `pgrep` command.
+//
+// Example:
+//
+//	running, err := IsProgramRunning("ipfs")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	if running {
+//	    fmt.Println("IPFS is running.")
+//	}
 func IsProgramRunning(programName string) (bool, error) {
 	// DEVELOPERS NOTE:
 	// (1)
@@ -106,6 +171,23 @@ func IsProgramRunning(programName string) (bool, error) {
 	return strings.TrimSpace(out.String()) != "", nil
 }
 
+// TerminateProgram attempts to terminate all processes matching the given
+// program name by sending a SIGTERM signal. It uses the `pgrep` command to
+// find the process IDs of the running instances and iterates over each to
+// send the termination signal.
+//
+// Parameters:
+// - processName (string): The name of the process to terminate.
+//
+// Returns:
+// - error: Returns an error if the process cannot be found or terminated.
+//
+// Example:
+//
+//	err := TerminateProgram("ipfs")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 func TerminateProgram(processName string) error {
 	// DEVELOPERS NOTE:
 	// (1)

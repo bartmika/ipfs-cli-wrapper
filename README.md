@@ -18,13 +18,13 @@
     import (
         "log"
 
-        "github.com/bartmika/ipfs-cli-wrapper"
+        ipfswrap "github.com/bartmika/ipfs-cli-wrapper"
     )
 
     func main() {
         // This step will download the IPFS binary if not already present.
         // Note: This is a blocking operation during the initial download.
-        wrapper, initErr := ipfscliwrapper.NewDaemonLauncher()
+        wrapper, initErr := ipfswrap.NewWrapper()
         if initErr != nil {
             log.Fatalf("Failed to create IPFS wrapper: %v", initErr)
         }
@@ -81,7 +81,7 @@
     )
 
     func main() {
-        wrapper, initErr := ipfscliwrapper.NewDaemonLauncher()
+        wrapper, initErr := ipfscliwrapper.NewWrapper()
         if initErr != nil {
             log.Fatalf("failed creating ipfs-cli-wrapper: %v", initErr)
         }

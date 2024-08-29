@@ -23,47 +23,79 @@ import (
 	"github.com/bartmika/ipfs-cli-wrapper/internal/urlkit"
 )
 
-// IpfsCliWrapper represents the a wrapper over a `ipfs` executable binary in
-// the operating system that we use to control the operation of.
+// ipfsCliWrapper represents a wrapper around the `ipfs` executable binary,
+// providing methods to control the operation of an IPFS node running as a daemon
+// in the operating system. This struct abstracts direct interaction with the IPFS
+// binary, allowing for simplified management of IPFS processes within applications.
 type ipfsCliWrapper struct {
+	// logger is used to log various actions and errors occurring within the wrapper.
 	logger *slog.Logger
-	// ipfsDaemonCmd variable is the pointer to the command shell instance of
-	// the `ipfs` binary running as daemon mode in the current operating system
-	// as background process.
+
+	// ipfsDaemonCmd is a pointer to the command shell instance of the `ipfs` binary
+	// running in daemon mode. It allows control over the background process that
+	// runs the IPFS daemon.
 	ipfsDaemonCmd *exec.Cmd
 
-	// stdout variable is the output stream from the console of the running
-	// `ipfs` binary running in daemon mode.
+	// stdout captures the output stream from the console of the `ipfs` daemon,
+	// enabling the wrapper to process or log real-time output from the IPFS node.
 	stdout io.ReadCloser
 
-	// isDaemonRunning variable controls the state in our wrapper if we see the
-	// `ipfs` binary running in daemon mode.
+	// isDaemonRunning indicates whether the IPFS binary is currently running in daemon mode.
+	// This boolean flag is used internally to track the state of the IPFS daemon.
 	isDaemonRunning bool
 
-	// isDaemonRunningContinously variable controls our wrapper to never shutdown our
-	// `ipfs` binary running in daemon mode unless you use the `ForceShutdown()`
-	// function.
+	// isDaemonRunningContinously controls whether the IPFS daemon should run indefinitely.
+	// When set to true, the wrapper will prevent the daemon from shutting down unless
+	// explicitly instructed to do so via the `ForceShutdown()` method.
 	isDaemonRunningContinously bool
 
-	// daemonInitialWarmupDuration variable used to artificially delay the
-	// `StartDaemonInBackground` function before releasing execution flow to
-	// the program.
-	// Set an artificial delay to give time for the `ipfs` binary to load up.
-	// This is dependent on your machine.
+	// daemonInitialWarmupDuration specifies an artificial delay period in the `StartDaemonInBackground`
+	// function before allowing other operations to proceed. This delay is intended to give the IPFS
+	// daemon time to initialize fully, and should be adjusted based on the performance of the
+	// underlying machine.
 	daemonInitialWarmupDuration time.Duration
 
-	// os variable used to track the operating system our wrapper is running on.
+	// os stores the operating system on which the wrapper is running. This information may be
+	// used for platform-specific adjustments or logging purposes.
 	os string
 
-	// arch variable used to track the CPU chip architecture that our wrapper.
-	// is running on.
+	// arch stores the CPU architecture of the machine on which the wrapper is running. This
+	// information is useful for ensuring compatibility with the IPFS binary and for logging.
 	arch string
 }
 
-// Option is a functional option type that allows us to configure the IpfsCliWrapper.
-type Option func(*ipfsCliWrapper)
-
-func NewDaemonLauncher(options ...Option) (IpfsCliWrapper, error) {
+// NewWrapper creates a new instance of IpfsCliWrapper with the specified options.
+// This function provides a flexible way to initialize the wrapper, allowing customization
+// through a set of functional options that modify the default configuration.
+//
+// Parameters:
+//   - options: A variadic list of Option functions that customize the behavior of the wrapper.
+//     Each Option function applies a specific modification to the configuration.
+//
+// Returns:
+//   - (IpfsCliWrapper, error): Returns an initialized IpfsCliWrapper instance or an error if
+//     the configuration is invalid or if initialization fails.
+//
+// Example usage:
+//
+//	wrapper, err := NewWrapper(
+//	    WithLogger(myLogger),
+//	    WithDaemonWarmupDuration(5 * time.Second),
+//	    WithContinuousDaemonRunning(true),
+//	)
+//	if err != nil {
+//	    log.Fatalf("Failed to initialize IPFS CLI wrapper: %v", err)
+//	}
+//
+// Notes:
+//   - The wrapper is designed to abstract the complexities of managing the IPFS daemon,
+//     providing a simple interface for starting, stopping, and interacting with the daemon.
+//   - It is crucial to configure the daemon warmup duration appropriately based on the expected
+//     startup time of the IPFS daemon on the host machine. Insufficient warmup time can lead
+//     to unexpected errors or failures in subsequent operations.
+//   - For long-running IPFS nodes that should not be interrupted, set `isDaemonRunningContinously`
+//     to true to ensure the daemon persists until explicitly shut down using `ForceShutdown()`.
+func NewWrapper(options ...Option) (IpfsCliWrapper, error) {
 	// STEP 1: Create the needed directories in the applications root directory
 	// so we can save our binary data into there.
 	dirs := []string{

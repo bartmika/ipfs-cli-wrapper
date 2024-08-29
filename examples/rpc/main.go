@@ -31,7 +31,7 @@ $ go run main.go
 */
 
 func main() {
-	wrapper, initErr := ipfscliwrapper.NewDaemonLauncher()
+	wrapper, initErr := ipfscliwrapper.NewWrapper()
 	if initErr != nil {
 		log.Fatalf("failed creating ipfs-cli-wrapper: %v", initErr)
 	}

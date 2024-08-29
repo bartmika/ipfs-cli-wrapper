@@ -25,7 +25,7 @@ $ go run main.go
 
 func main() {
 	// Note: Link taken from official docs via https://github.com/ipfs/kubo/blob/master/docs/content-blocking.md#denylist-file-format.
-	wrapper, initErr := ipfscliwrapper.NewDaemonLauncher(
+	wrapper, initErr := ipfscliwrapper.NewWrapper(
 		ipfscliwrapper.WithDenylist("badbits.deny", "https://badbits.dwebops.pub/badbits.deny"),
 	)
 	if initErr != nil {

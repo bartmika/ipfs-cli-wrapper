@@ -33,7 +33,7 @@ func main() {
 
 	// Step 1: Start IPFS.
 
-	wrapper, initErr := ipfscliwrapper.NewDaemonLauncher(
+	wrapper, initErr := ipfscliwrapper.NewWrapper(
 		ipfscliwrapper.WithForcedShutdownDaemonOnStartup(),
 		ipfscliwrapper.WithRunGarbageCollectionOnStarup(),
 	)
