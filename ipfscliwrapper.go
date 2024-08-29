@@ -1,6 +1,6 @@
-// IPFS-DaemonLauncher is a package that manages running an IPFS node in the background
+// ipfscliwrapper is a package that manages running an IPFS node in the background
 // and offers a user-friendly interface, enabling you to build IPFS-embedded
-// Golang applications more efficiently.
+// Golang applications more easily.
 package ipfscliwrapper
 
 import (
