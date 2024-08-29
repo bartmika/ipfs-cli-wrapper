@@ -35,7 +35,6 @@ func main() {
 
 	wrapper, initErr := ipfscliwrapper.NewWrapper(
 		ipfscliwrapper.WithForcedShutdownDaemonOnStartup(),
-		ipfscliwrapper.WithRunGarbageCollectionOnStarup(),
 	)
 	if initErr != nil {
 		log.Fatalf("failed creating ipfs-cli-wrapper: %v", initErr)

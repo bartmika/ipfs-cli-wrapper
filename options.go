@@ -1,10 +1,8 @@
 package ipfscliwrapper
 
 import (
-	"context"
 	"log"
 	"os"
-	"os/exec"
 	"time"
 
 	"github.com/bartmika/ipfs-cli-wrapper/internal/oskit"
@@ -72,19 +70,6 @@ func WithDenylist(denylistFilename string, denylistURL string) Option {
 			if downloadErr := urlkit.DownloadFile(denylistURL, downloadedDenylistFilePath); downloadErr != nil {
 				log.Fatalf("failed downloading the binary: %v", downloadErr)
 			}
-		}
-	}
-}
-
-func WithRunGarbageCollectionOnStarup() Option {
-	return func(wrap *ipfsCliWrapper) {
-		// Prepare the command run garbage collection for the `ipfs` binary.
-		cmd := exec.CommandContext(context.Background(), IPFSBinaryFilePath, "repo", "gc")
-
-		// Capture the output of the command
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Fatalf("error ipfs running garbage collection on startup: %v\n%v", string(output), err)
 		}
 	}
 }
