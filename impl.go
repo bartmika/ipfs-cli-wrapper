@@ -164,11 +164,11 @@ func NewWrapper(options ...Option) (IpfsCliWrapper, error) {
 	// Setup the command we will execute in our shell.
 	app := IPFSBinaryFilePath
 	arg0 := "daemon"
-	arg1 := "--enable-gc" // Enable garbage collection
-	daemonCmd := exec.Command(app, arg0)
+	arg1 := "--enable-gc" // Enable automatic garbage collection in runtime.
+	daemonCmd := exec.Command(app, arg0, arg1)
 
 	// Set the environment variable before executing the command
-	daemonCmd.Env = append(os.Environ(), "IPFS_PATH="+IPFSDataDirPath, arg1)
+	daemonCmd.Env = append(os.Environ(), "IPFS_PATH="+IPFSDataDirPath)
 
 	// Create a pipe to read the output of the command
 	stdout, err := daemonCmd.StdoutPipe()
