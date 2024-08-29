@@ -137,30 +137,28 @@ func NewWrapper(options ...Option) (IpfsCliWrapper, error) {
 		if err := downloadAndUnzip(wrapper.logger, wrapper.os, wrapper.arch); err != nil {
 			log.Fatalf("failed to get ipfs binary from url: %v", err)
 		}
+	}
 
-		// STEP 5: Execute our `ipfs` binary `init` command so the application gets
-		// setup; however, we will also set the environment variable before
-		// executing the command, therefore pointing to a different location for
-		// saving data. Please note, ignore error and output here. We do this
-		// because if we run `init` again after this app was already called then
-		// `ipfs` will return error so we don't care.
-		initCmd := exec.Command(IPFSBinaryFilePath, "init")
-		initCmd.Env = append(os.Environ(), "IPFS_PATH="+IPFSDataDirPath)
+	// STEP 5: Execute our `ipfs` binary `init` command so the application gets
+	// setup; however, we will also set the environment variable before
+	// executing the command, therefore pointing to a different location for
+	// saving data. Please note, ignore error and output here. We do this
+	// because if we run `init` again after this app was already called then
+	// `ipfs` will return error so we don't care.
+	initCmd := exec.Command(IPFSBinaryFilePath, "init")
+	initCmd.Env = append(os.Environ(), "IPFS_PATH="+IPFSDataDirPath)
 
-		// Execute the command and check for errors
-		if output, err := initCmd.CombinedOutput(); err != nil {
-			wrapper.logger.Error("failed to initialize IPFS",
+	// Execute the command and check for errors
+	if output, err := initCmd.CombinedOutput(); err != nil {
+		if !strings.Contains(string(output), "ipfs configuration file already exists") {
+			// Log or handle the error appropriately, if needed
+			wrapper.logger.Warn("failed to initialize IPFS",
 				slog.Any("error", err),
 				slog.String("output", string(output)))
-			// Log or handle the error appropriately, if needed
-		} else {
-			wrapper.logger.Debug("IPFS initialization completed successfully",
-				slog.String("output", string(output)))
 		}
-
-		// Set an artificial delay to give time for the `ipfs` binary to load up.
-		// Another perspective is this is the `warmup time`.
-		time.Sleep(wrapper.daemonInitialWarmupDuration)
+	} else {
+		wrapper.logger.Debug("IPFS initialization completed successfully",
+			slog.String("output", string(output)))
 	}
 
 	// Setup the command we will execute in our shell.
@@ -388,6 +386,8 @@ func downloadAndUnzip(logger *slog.Logger, osName, archName string) error {
 	// This code is essentially a `just-in-case` sort of thing to run.
 	os.Chmod(IPFSBinaryFilePath, 0777)
 
+	logger.Debug("ipfs binary ready for usage",
+		slog.String("filepath", IPFSBinaryFilePath))
 	return nil
 }
 
