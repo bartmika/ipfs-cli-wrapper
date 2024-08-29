@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/bartmika/ipfs-cli-wrapper)](https://github.com/bartmika/ipfs-cli-wrapper/blob/master/LICENSE)
 ![Go version](https://img.shields.io/github/go-mod/go-version/bartmika/ipfs-cli-wrapper)
 
-**IPFS Daemon Launcher** is a Go package that manages [IPFS](https://github.com/ipfs/kubo) by running the `ipfs` binary as a separate process alongside your Go application. This package allows your Go application to start an IPFS node, connect it to the IPFS network, and interact with the node via the [HTTP Kubo RPC API](https://docs.ipfs.tech/reference/kubo/rpc/). Your Go application can also gracefully shut down the IPFS node when needed.
+**IPFS CLI Wrapper** is a Go package that manages [IPFS](https://github.com/ipfs/kubo) by running the `ipfs` binary as a separate process alongside your Go application. This package allows your Go application to start an IPFS node, connect it to the IPFS network, and interact with the node via the [HTTP Kubo RPC API](https://docs.ipfs.tech/reference/kubo/rpc/) or commands. Your Go application can also gracefully shut down the IPFS node when needed.
 
 ## Key Features
 
