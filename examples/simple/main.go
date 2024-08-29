@@ -52,6 +52,9 @@ func main() {
 	// Register for specific signals
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
+	// Give artifical delay
+	log.Println("exiting program in 2 minutes or you can click `CTRL` + `C` in your keyboard to exit early...")
+
 	// Wait for either the context to be done or an OS signal to be received
 	select {
 	case <-ctx.Done():
