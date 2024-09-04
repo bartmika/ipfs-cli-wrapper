@@ -61,6 +61,16 @@ type ipfsCliWrapper struct {
 	// arch stores the CPU architecture of the machine on which the wrapper is running. This
 	// information is useful for ensuring compatibility with the IPFS binary and for logging.
 	arch string
+
+	denylistFilename string
+	denylistURL      string
+
+	forceShutdownOnStartup bool
+
+	// Dependencies to allow for mocking in tests.
+	osOperator      oskit.OSOperater
+	urlDownloader   urlkit.URLDownloader
+	randomGenerator randomkit.RandomGenerator
 }
 
 // NewWrapper creates a new instance of IpfsCliWrapper with the specified options.
@@ -95,18 +105,7 @@ type ipfsCliWrapper struct {
 //   - For long-running IPFS nodes that should not be interrupted, set `isDaemonRunningContinously`
 //     to true to ensure the daemon persists until explicitly shut down using `ForceShutdown()`.
 func NewWrapper(options ...Option) (IpfsCliWrapper, error) {
-	// STEP 1: Create the needed directories in the applications root directory
-	// so we can save our binary data into there.
-	dirs := []string{
-		"./bin", // The root folder which holds all our data we are managing.
-		IPFSDataDirPath,
-		IPFSDenylistDirPath,
-	}
-	if err := oskit.CreateDirsIfDoesNotExist(dirs); err != nil {
-		log.Fatalf("failed to make directory: %v", err)
-	}
-
-	// STEP 2. Get the OS and chip architecture to use so we will know what
+	// STEP 1. Get the OS and chip architecture to use so we will know what
 	// binary to utilize in our wrapper.
 
 	// Get the architecture of the machine
@@ -115,7 +114,7 @@ func NewWrapper(options ...Option) (IpfsCliWrapper, error) {
 	// Get the operating system
 	osName := runtime.GOOS
 
-	// STEP 3: Apply our option conditions.
+	// STEP 2: Create our struct to track our app.
 
 	wrapper := &ipfsCliWrapper{
 		logger:                      logger.NewProvider(),
@@ -124,22 +123,66 @@ func NewWrapper(options ...Option) (IpfsCliWrapper, error) {
 		daemonInitialWarmupDuration: time.Duration(5) * time.Second,
 		os:                          osName,
 		arch:                        archName,
+		osOperator:                  &oskit.DefaultOSKit{},
+		urlDownloader:               &urlkit.DefaultURLKit{},
+		randomGenerator:             &randomkit.CryptoRandomGenerator{},
 	}
+
+	// STEP 3: Apply our option conditions.
 
 	// Apply all the functional options to configure the client.
 	for _, opt := range options {
 		opt(wrapper)
 	}
 
-	// STEP 4: Check to see if we have our `ipfs` binary ready to execute and if
+	// STEP 4: Create the needed directories in the applications root directory
+	// so we can save our binary data into there.
+
+	dirs := []string{
+		"./bin", // The root folder which holds all our data we are managing.
+		IPFSDataDirPath,
+		IPFSDenylistDirPath,
+	}
+	if err := wrapper.osOperator.CreateDirsIfDoesNotExist(dirs); err != nil {
+		log.Fatalf("failed to make directory: %v", err)
+	}
+
+	// STEP 5: Check to see if we have our `ipfs` binary ready to execute and if
 	// not then we will need to download it and get it ready for execution.
 	if _, err := os.Stat(IPFSBinaryFilePath); err != nil {
-		if err := downloadAndUnzip(wrapper.logger, wrapper.os, wrapper.arch); err != nil {
+		if err := wrapper.downloadAndUnzip(wrapper.logger, wrapper.os, wrapper.arch); err != nil {
 			log.Fatalf("failed to get ipfs binary from url: %v", err)
 		}
 	}
 
-	// STEP 5: Execute our `ipfs` binary `init` command so the application gets
+	// STEP 6: If user wants to force shutdown any pervious running instances.
+	// This is controlled by the `WithForcedShutdownDaemonOnStartup` option.
+	if wrapper.forceShutdownOnStartup {
+		// This code is special because we need to lookup the `ipfs` running
+		// process in the operating system and send a `SIGTERM` signal via
+		// the operating system to cause that app to shutdown.
+		if err := wrapper.osOperator.TerminateProgram("ipfs"); err != nil {
+			// Note: Do not crash program with `log.Fatalf` but instead just
+			// provide a warning in the console output.
+			wrapper.logger.Warn("failed terminating ipfs from os background",
+				slog.Any("error", err))
+		}
+	}
+
+	// STEP 7: Download denylist and setup denylist. This is configured by
+	// the `WithDenylist` option.
+	if wrapper.denylistFilename != "" {
+		downloadedDenylistFilePath := "./bin/kubo/data/denylists/" + wrapper.denylistFilename
+
+		// Download the file if it wasn't downloaded before.
+		if _, err := os.Stat(downloadedDenylistFilePath); err != nil {
+			if downloadErr := wrapper.urlDownloader.DownloadFile(wrapper.denylistURL, downloadedDenylistFilePath); downloadErr != nil {
+				log.Fatalf("failed downloading the binary: %v", downloadErr)
+			}
+		}
+	}
+
+	// STEP 8: Execute our `ipfs` binary `init` command so the application gets
 	// setup; however, we will also set the environment variable before
 	// executing the command, therefore pointing to a different location for
 	// saving data. Please note, ignore error and output here. We do this
@@ -192,7 +235,7 @@ func NewWrapper(options ...Option) (IpfsCliWrapper, error) {
 func (wrap *ipfsCliWrapper) StartDaemonInBackground() error {
 	// Before we begin our code, let's check if the `ipfs` binary is already
 	// running in the background, for whatever reason.
-	if isRunningAlready, err := oskit.IsProgramRunning("ipfs"); isRunningAlready || err != nil {
+	if isRunningAlready, err := wrap.osOperator.IsProgramRunning("ipfs"); isRunningAlready || err != nil {
 		if isRunningAlready {
 			wrap.isDaemonRunning = true
 			wrap.logger.Debug("ipfs daemon is already running and waiting for api call from your app")
@@ -251,7 +294,7 @@ func (wrap *ipfsCliWrapper) ForceShutdownDaemon() error {
 		// This code is special because we need to lookup the `ipfs` running
 		// process in the operating system and send a `SIGTERM` signal via
 		// the operating system to cause that app to shutdown.
-		return oskit.TerminateProgram("ipfs")
+		return wrap.osOperator.TerminateProgram("ipfs")
 	}
 	return wrap.ShutdownDaemon()
 }
@@ -288,7 +331,7 @@ func (wrap *ipfsCliWrapper) ShutdownDaemon() error {
 // downloadAndUnzip function will download the `ipfs` binary based on your
 // machine operating system and CPU architecture; afterwords, unzip the binary
 // and have it ready for execution.
-func downloadAndUnzip(logger *slog.Logger, osName, archName string) error {
+func (wrap *ipfsCliWrapper) downloadAndUnzip(logger *slog.Logger, osName, archName string) error {
 	logger.Debug("ipfs binary does not exist, need to fetch now...")
 
 	binaryDirName := "bin"
@@ -314,7 +357,7 @@ func downloadAndUnzip(logger *slog.Logger, osName, archName string) error {
 			slog.String("arch", archName),
 			slog.String("url", url))
 
-		if downloadErr := urlkit.DownloadFile(url, zippedBinaryFilePath); downloadErr != nil {
+		if downloadErr := wrap.urlDownloader.DownloadFile(url, zippedBinaryFilePath); downloadErr != nil {
 			logger.Error("failed downloading the binary",
 				slog.Any("error", err),
 				slog.String("url", url),
@@ -326,14 +369,14 @@ func downloadAndUnzip(logger *slog.Logger, osName, archName string) error {
 
 	logger.Debug("ipfs binary unzipping...")
 
-	if err := oskit.CreateDirIfDoesNotExist(unzippedDirPath); err != nil {
+	if err := wrap.osOperator.CreateDirIfDoesNotExist(unzippedDirPath); err != nil {
 		logger.Error("failed to make directory",
 			slog.Any("error", err),
 			slog.String("os", osName),
 			slog.String("arch", archName))
 		log.Fatalf("failed to make directory: %v", err)
 	}
-	if err := oskit.CreateDirIfDoesNotExist(IPFSDataDirPath); err != nil {
+	if err := wrap.osOperator.CreateDirIfDoesNotExist(IPFSDataDirPath); err != nil {
 		logger.Error("failed to make directory",
 			slog.Any("error", err),
 			slog.String("os", osName),

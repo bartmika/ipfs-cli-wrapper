@@ -1,11 +1,10 @@
 package ipfscliwrapper
 
 import (
-	"log"
-	"os"
 	"time"
 
 	"github.com/bartmika/ipfs-cli-wrapper/internal/oskit"
+	"github.com/bartmika/ipfs-cli-wrapper/internal/randomkit"
 	"github.com/bartmika/ipfs-cli-wrapper/internal/urlkit"
 )
 
@@ -47,14 +46,7 @@ func WithOverrideDaemonInitialWarmupDuration(seconds int) Option {
 // instance.
 func WithForcedShutdownDaemonOnStartup() Option {
 	return func(wrap *ipfsCliWrapper) {
-		// This code is special because we need to lookup the `ipfs` running
-		// process in the operating system and send a `SIGTERM` signal via
-		// the operating system to cause that app to shutdown.
-		if err := oskit.TerminateProgram("ipfs"); err != nil {
-			// Note: Do not crash program with `log.Fatalf` but instead just
-			// provide a warning in the console output.
-			log.Printf("warning - failed terminating ipfs from os background: %v\n", err)
-		}
+		wrap.forceShutdownOnStartup = true
 	}
 }
 
@@ -63,13 +55,25 @@ func WithForcedShutdownDaemonOnStartup() Option {
 // [0] https://github.com/ipfs/kubo/blob/master/docs/content-blocking.md
 func WithDenylist(denylistFilename string, denylistURL string) Option {
 	return func(wrap *ipfsCliWrapper) {
-		downloadedDenylistFilePath := "./bin/kubo/data/denylists/" + denylistFilename
+		wrap.denylistFilename = denylistFilename
+		wrap.denylistURL = denylistURL
+	}
+}
 
-		// Download the file if it wasn't downloaded before.
-		if _, err := os.Stat(downloadedDenylistFilePath); err != nil {
-			if downloadErr := urlkit.DownloadFile(denylistURL, downloadedDenylistFilePath); downloadErr != nil {
-				log.Fatalf("failed downloading the binary: %v", downloadErr)
-			}
-		}
+func WithCustomOsOperator(osOperator oskit.OSOperater) Option {
+	return func(wrap *ipfsCliWrapper) {
+		wrap.osOperator = osOperator
+	}
+}
+
+func WithCustomUrlDownloader(urlDownloader urlkit.URLDownloader) Option {
+	return func(wrap *ipfsCliWrapper) {
+		wrap.urlDownloader = urlDownloader
+	}
+}
+
+func WithCustomRandomGenerator(gen randomkit.RandomGenerator) Option {
+	return func(wrap *ipfsCliWrapper) {
+		wrap.randomGenerator = gen
 	}
 }

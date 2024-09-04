@@ -9,6 +9,14 @@ import (
 	"os"
 )
 
+// URLDownloader defines methods for downloading files.
+type URLDownloader interface {
+	DownloadFile(url, destination string) error
+}
+
+// DefaultURLKit is the default implementation of URLDownloader.
+type DefaultURLKit struct{}
+
 // DownloadFile downloads a file from the specified URL and saves it to the specified file path.
 // It handles creating the destination file, making the HTTP GET request, and writing the response
 // body to the file. If the HTTP response status is not OK (200), it returns an error.
@@ -27,7 +35,7 @@ import (
 //	if err != nil {
 //	    log.Fatalf("Failed to download file: %v", err)
 //	}
-func DownloadFile(fromUrl string, saveToFilepath string) (err error) {
+func (d *DefaultURLKit) DownloadFile(fromUrl string, saveToFilepath string) (err error) {
 	// Create the file
 	out, err := os.Create(saveToFilepath)
 	if err != nil {
