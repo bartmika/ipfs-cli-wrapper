@@ -204,11 +204,14 @@ func NewWrapper(options ...Option) (IpfsCliWrapper, error) {
 			slog.String("output", string(output)))
 	}
 
-	// Setup the command we will execute in our shell.
+	// Setup the command we will execute in our shell. For more details here,
+	// please visit the developer documentations for the `Kubo CLI` via this link:
+	// https://docs.ipfs.tech/reference/kubo/cli/#ipfs-daemon
 	app := IPFSBinaryFilePath
 	arg0 := "daemon"
-	arg1 := "--enable-gc" // Enable automatic garbage collection in runtime.
-	daemonCmd := exec.Command(app, arg0, arg1)
+	arg1 := "--enable-gc=true" // Enable automatic garbage collection in runtime.
+	arg2 := "--migrate=true"   // Auto-select "yes" on migrate prompt.
+	daemonCmd := exec.Command(app, arg0, arg1, arg2)
 
 	// Set the environment variable before executing the command
 	daemonCmd.Env = append(os.Environ(), "IPFS_PATH="+IPFSDataDirPath)
